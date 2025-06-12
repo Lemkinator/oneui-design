@@ -150,11 +150,14 @@
         <item name="android:src">@drawable/oui_des_preference_seekbar_pro_minus</item>
     </style>
 
-    <!-- List Divider-->
-    <style name="OneUI.ListDividerStyle" >
+    <!-- Dividers-->
+    <style name="OneUI.FullWidthDividerStyle" >
         <item name="android:background">?attr/listDividerColor</item>
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">@dimen/sesl_list_divider_height</item>
+    </style>
+
+    <style name="OneUI.ListDividerStyle" parent="OneUI.FullWidthDividerStyle">
         <item name="android:layout_marginStart">?listPreferredItemPaddingStart</item>
         <item name="android:layout_marginEnd">?listPreferredItemPaddingEnd</item>
     </style>
@@ -180,15 +183,15 @@
         <item name="bottomSheetStyle">@style/OneUI.BottomSheetStyle</item>
         <item name="android:backgroundDimAmount">.32</item>
         <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:windowAnimationStyle">@style/Animation.OneUI.BottomSheetDialog</item>
     </style>
 
     <style name="OneUI.BottomSheetDialog" parent="@style/Theme.Design.BottomSheetDialog">
         <item name="bottomSheetStyle">@style/OneUI.BottomSheetStyle</item>
         <item name="android:backgroundDimAmount">.32</item>
         <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:windowAnimationStyle">@style/Animation.OneUI.BottomSheetDialog</item>
     </style>
-
-    <!--    <item format="float" name="container_opacity" type="dimen">0.35</item>-->
 
     <style name="OneUI.BottomSheetStyle" parent="Widget.Design.BottomSheet.Modal">
         <item name="android:background">@drawable/oui_des_bottomsheet_bg</item>
@@ -196,13 +199,14 @@
     </style>
 
     <style name="OneUI.BottomSheet.DragHandle" parent="">
-        <item name="srcCompat">@drawable/oui_des_bottomsheet_drag_handle</item>
-        <item name="android:scaleType">center</item>
         <item name="android:contentDescription">@string/bottomsheet_drag_handle_content_description</item>
-        <item name="android:minWidth">@dimen/mtrl_min_touch_target_size</item>
-        <item name="android:minHeight">@dimen/mtrl_min_touch_target_size</item>
+        <item name="android:minHeight">24dp</item>
         <item name="android:paddingBottom">@dimen/m3_bottom_sheet_drag_handle_bottom_padding</item>
-        <item name="tint">@color/oui_des_bottomsheet_drag_handle_tint</item>
+    </style>
+
+    <style name="Animation.OneUI.BottomSheetDialog" parent="Animation.AppCompat.Dialog">
+        <item name="android:windowEnterAnimation">@anim/oui_des_bottom_sheet_enter</item>
+        <item name="android:windowExitAnimation">@anim/oui_des_bottom_sheet_exit</item>
     </style>
 
     <style name="OneUI.SearchHighlightedTextAppearance" parent="RobotoMedium">
