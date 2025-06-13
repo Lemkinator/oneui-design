@@ -18,20 +18,27 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:gravity="center"
+            android:gravity="start"
             android:orientation="vertical"
-            android:paddingBottom="120dp">
+            android:paddingBottom="320dp">
 
             <TextView
                 android:id="@+id/title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="12dp"
+                android:paddingHorizontal="28dp"
+                android:paddingBottom="8dp"
                 android:text="Bottom Sheet"
-                android:textAlignment="center"
+                android:textAlignment="textStart"
                 android:textColor="?android:textColorPrimary"
-                android:textSize="25sp" />
+                android:textSize="22sp"
+                android:textAppearance="@style/RobotoMedium" />
 
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:paddingHorizontal="0dp"
+                style="@style/OneUI.FullWidthDividerStyle"/>
 
         </LinearLayout>
 
