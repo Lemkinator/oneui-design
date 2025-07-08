@@ -138,7 +138,6 @@ class IconsFragment : AbsBaseFragment(R.layout.fragment_icons),
             )
             enableCoreSeslFeatures()
             hideSoftInputOnScroll()
-            seslSetFastScrollerAdditionalPadding(8.dpToPx(resources))
         }
 
         iconsAdapter.configure(

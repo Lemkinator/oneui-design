@@ -68,7 +68,6 @@ class AppPickerFragment : AbsBaseFragment(R.layout.fragment_apppicker),
             appListOrder = ORDER_ASCENDING
             seslSetFillHorizontalPaddingEnabled(true)
             seslSetIndexTipEnabled(true)
-            seslSetFastScrollerAdditionalPadding(10.dpToPx(resources))
 
             setOnItemClickEventListener { _, appInfo ->
                 semToast("${packageManagerHelper.getAppLabel(appInfo)} clicked!")
