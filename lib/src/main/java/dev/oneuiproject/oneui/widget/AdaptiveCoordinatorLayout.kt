@@ -12,9 +12,6 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.updateLayoutParams
 import dev.oneuiproject.oneui.design.R
 import dev.oneuiproject.oneui.ktx.activity
-import dev.oneuiproject.oneui.ktx.pxToDp
-import dev.oneuiproject.oneui.ktx.windowHeight
-import dev.oneuiproject.oneui.ktx.windowWidthNetOfInsets
 import dev.oneuiproject.oneui.layout.internal.util.ToolbarLayoutUtils.updateStatusBarVisibility
 
 /**
@@ -66,6 +63,8 @@ open class AdaptiveCoordinatorLayout @JvmOverloads constructor(
     private var adaptiveMarginViews: Set<View>? = null
 
     private val activity by lazy(LazyThreadSafetyMode.NONE) { context.activity }
+
+    private var pendingMarginUpdates: MutableSet<View> = mutableSetOf()
 
     /**
      * This function allows you to define custom logic for calculating
@@ -138,6 +137,21 @@ open class AdaptiveCoordinatorLayout @JvmOverloads constructor(
         }
     }
 
+    private fun applyPendingMarginUpdates() {
+        if (pendingMarginUpdates.isEmpty()) return
+
+        val smp = lastSideMarginParams ?: return
+
+        pendingMarginUpdates.forEach { child ->
+            if (adaptiveMarginViews?.contains(child) == true) {
+                @Suppress("UNCHECKED_CAST")
+                val origMargins = child.getTag(R.id.tag_init_side_margins) as Pair<Int, Int>
+                child.applySideMarginParams(smp, origMargins.first, origMargins.second)
+            }
+        }
+
+        pendingMarginUpdates.clear()
+    }
 
     override fun addView(child: View, index: Int, params: ViewGroup.LayoutParams) {
         child.setTag(R.id.tag_init_side_margins, Pair((params as MarginLayoutParams).leftMargin,  params.rightMargin))
@@ -148,6 +162,9 @@ open class AdaptiveCoordinatorLayout @JvmOverloads constructor(
         // Compute side margin parameters before measuring children.
         computeSideMarginParams()
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+
+        // Apply pending margin updates after measurement is complete
+        applyPendingMarginUpdates()
     }
 
     override fun onMeasureChild(
@@ -159,13 +176,8 @@ open class AdaptiveCoordinatorLayout @JvmOverloads constructor(
     ) {
 
         if (lastSideMarginParams != null && adaptiveMarginViews?.contains(child) == true) {
-            @Suppress("UNCHECKED_CAST")
-            val origMargins = child.getTag(R.id.tag_init_side_margins) as Pair<Int, Int>
-            child.applySideMarginParams(
-                lastSideMarginParams!!,
-                origMargins.first,
-                origMargins.second
-            )
+            // Defer margin updates to avoid ANR during measurement
+            pendingMarginUpdates.add(child)
         }
 
         super.onMeasureChild(
