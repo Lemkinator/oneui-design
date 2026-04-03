@@ -297,19 +297,22 @@ internal class SemSlidingPaneLayout @JvmOverloads constructor(
 
     override fun setCustomHeader(headerView: View, params: ViewGroup.LayoutParams) {
         (drawerHeaderLayout as ViewGroup).apply {
-            removeView(drawerHeaderButton)
-            removeView(drawerHeaderButtonBadgeView)
+            drawerHeaderButton?.let { removeView(it) }
+            drawerHeaderButtonBadgeView?.let { removeView(it) }
         }
         _drawerPane.addView(headerView, 1, params)
         drawerHeaderButton = headerView.findViewById(R.id.oui_des_drawer_header_button)
         drawerHeaderButtonBadgeView = headerView.findViewById(R.id.oui_des_drawer_header_button_badge)
-        navRailDrawerButton = headerView.findViewById<ImageButton>(R.id.navRailDrawerButton).apply {
+        navRailDrawerButton = headerView.findViewById<ImageButton?>(R.id.navRailDrawerButton)?.apply {
             isVisible = true
         }
         navRailDrawerButtonBadgeView = headerView.findViewById(R.id.navRailDrawerButtonBadge)
 
         if (drawerHeaderButton == null) {
             Log.e(TAG, "`drawer_header_button` id is missing or is not an ImageButton")
+        }
+        if (navRailDrawerButton == null) {
+            Log.e(TAG, "`navRailDrawerButton` id is missing or is not a ImageButton")
         }
         if (drawerHeaderButtonBadgeView == null) {
             Log.e(TAG, "`drawer_header_button_badge` id is missing or is not a TextView")
