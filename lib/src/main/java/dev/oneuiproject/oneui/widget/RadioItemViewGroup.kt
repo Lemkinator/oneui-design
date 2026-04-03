@@ -105,68 +105,6 @@ class RadioItemViewGroup @JvmOverloads constructor(
 
     }
 
-    private fun findChildViewUnder(view: View, x: Int, y: Int): View? {
-        var foundView: View? = null
-
-        if (view is ViewGroup) {
-            for (i in 0 until view.childCount) {
-                val child: View = view.getChildAt(i)
-
-                val childRect = Rect()
-                val parentRect = Rect()
-                child.getGlobalVisibleRect(childRect)
-                getGlobalVisibleRect(parentRect)
-
-                if (childRect.contains(parentRect.left + x, parentRect.top + y)) {
-                    foundView = findChildViewUnder(child, x, y)
-                    if (foundView != null) {
-                        break
-                    }
-                }
-            }
-        }
-
-        if (foundView == null && view.isClickable && view.isVisible && view.isEnabled) {
-            return view
-        }
-
-        return foundView
-    }
-
-    private fun findClickableChildUnder(event: MotionEvent): View? {
-        var clickableChild: View? = null
-
-        for (i in 0 until childCount) {
-            val child = getChildAt(i)
-            val childRect = Rect()
-            val parentRect = Rect()
-            child.getGlobalVisibleRect(childRect)
-            getGlobalVisibleRect(parentRect)
-
-            if (childRect.contains(
-                    parentRect.left + event.x.toInt(),
-                    parentRect.top + event.y.toInt()
-                )
-            ) {
-                clickableChild = child
-                break
-            }
-        }
-
-        if (clickableChild == null) {
-            return null
-        }
-
-        val childUnder = findChildViewUnder(clickableChild, event.x.toInt(), event.y.toInt())
-        if (childUnder != null && childUnder !== clickableChild) {
-            if (childUnder.height * childUnder.width < clickableChild.height * clickableChild.width * 0.5) {
-                return null
-            }
-        }
-
-        return childUnder
-    }
-
     override fun setOnHierarchyChangeListener(listener: OnHierarchyChangeListener) {
         // the user listener is delegated to our pass-through listener
         passThroughListener.mOnHierarchyChangeListener = listener
