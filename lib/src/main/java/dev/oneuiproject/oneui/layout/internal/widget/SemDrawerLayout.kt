@@ -265,7 +265,10 @@ internal class SemDrawerLayout @JvmOverloads constructor(
     }
 
     override fun setCustomHeader(headerView: View, params: ViewGroup.LayoutParams){
-        drawerPane.removeView(this@SemDrawerLayout.headerView)
+        if (this@SemDrawerLayout.headerView === headerView) return
+        if (this@SemDrawerLayout.headerView.parent === drawerPane) {
+            drawerPane.removeView(this@SemDrawerLayout.headerView)
+        }
         drawerHeaderButton = null
         drawerHeaderBadgeView = null
         drawerPane.addView(headerView, 0, params)
