@@ -360,7 +360,7 @@ internal class SemDrawerLayout @JvmOverloads constructor(
     override val isDrawerOpen: Boolean get() = (currentState == DrawerState.OPEN)
 
     override val isDrawerOpenOrIsOpening: Boolean
-        get() = currentState == DrawerState.OPEN || currentState == DrawerState.OPENING
+        get() = currentState == DrawerState.OPEN || currentState is DrawerState.OPENING
 
 
     override var showNavigationButtonAsBack: Boolean

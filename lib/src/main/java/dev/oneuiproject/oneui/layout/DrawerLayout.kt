@@ -53,11 +53,11 @@ import dev.oneuiproject.oneui.utils.DeviceLayoutUtil.isPortrait
 open class DrawerLayout(context: Context, attrs: AttributeSet?) :
     ToolbarLayout(context, attrs), Openable {
 
-    enum class DrawerState {
-        OPEN,
-        CLOSE,
-        CLOSING,
-        OPENING
+    sealed class DrawerState {
+        data object OPEN: DrawerState()
+        data object CLOSE: DrawerState()
+        data class CLOSING(val slideOffset: Float): DrawerState()
+        data class OPENING(val slideOffset: Float): DrawerState()
     }
 
     enum class FeatureState {

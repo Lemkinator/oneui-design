@@ -67,8 +67,8 @@ internal object DrawerLayoutUtils {
             0f -> DrawerState.CLOSE
             else -> {
                 when {
-                    currentOffset > previousOffset -> DrawerState.OPENING
-                    else -> DrawerState.CLOSING
+                    currentOffset > previousOffset -> DrawerState.OPENING(currentOffset)
+                    else -> DrawerState.CLOSING(currentOffset)
                 }
             }
         }
