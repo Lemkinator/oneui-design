@@ -42,7 +42,8 @@ internal class DrawerMenuPresenter(
 ) : MenuPresenter {
 
     private var drawerMenuView: DrawerMenuView? = null
-    private var lastOffsetApplied = -1f
+    @Volatile
+    private var currentOffset = -1f
 
     sealed interface NavigationMenuItem{
         fun getItemId():Long
@@ -211,9 +212,9 @@ internal class DrawerMenuPresenter(
         }
     }
 
-    sealed class Payload{
-        data class OFFSET(val slideOffset: Float): Payload()
-        data object LOCK: Payload()
+    enum class Payload{
+        OFFSET,
+        LOCK
     }
 
     inner class NavigationMenuAdapter internal constructor() : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
@@ -232,9 +233,9 @@ internal class DrawerMenuPresenter(
         }
 
         fun updateOffset(slideOffset: Float) {
-            if (slideOffset == lastOffsetApplied) return
-            lastOffsetApplied = slideOffset
-            notifyItemRangeChanged(0, itemCount, Payload.OFFSET(slideOffset))
+            if (slideOffset == currentOffset) return
+            currentOffset = slideOffset
+            notifyItemRangeChanged(0, itemCount, Payload.OFFSET)
         }
 
         override fun getItemId(position: Int) = items[position].getItemId()
@@ -294,12 +295,12 @@ internal class DrawerMenuPresenter(
             }else {
                 for (payload in payloads.toSet()) {
                     when (payload) {
-                        is Payload.OFFSET -> {
+                        Payload.OFFSET -> {
                             when (getItemViewType(position)) {
-                                VIEW_TYPE_NORMAL ->  (holder as NormalViewHolder).updateOffset(payload.slideOffset)
-                                VIEW_TYPE_SEPARATOR -> (holder as SeparatorViewHolder).updateOffset(payload.slideOffset)
-                                VIEW_TYPE_CATEGORY -> (holder as CategoryItemViewHolder).updateOffset(payload.slideOffset)
-                                VIEW_TYPE_SUBHEADER -> (holder as SubheaderViewHolder).updateOffset(payload.slideOffset)
+                                VIEW_TYPE_NORMAL -> (holder as NormalViewHolder).updateOffset()
+                                VIEW_TYPE_SEPARATOR -> (holder as SeparatorViewHolder).updateOffset()
+                                VIEW_TYPE_CATEGORY -> (holder as CategoryItemViewHolder).updateOffset()
+                                VIEW_TYPE_SUBHEADER -> (holder as SubheaderViewHolder).updateOffset()
                             }
                         }
 
@@ -362,14 +363,10 @@ internal class DrawerMenuPresenter(
                 val menuItem = navItem.menuItem
                 menuItemView.initialize(menuItem, if (navItem.isSubMenu) DrawerMenuItemView.MENU_TYPE_SUBMENU else DrawerMenuItemView.MENU_TYPE_NORMAL)
                 updateLock(menuItem)
-                if (lastOffsetApplied != -1f){
-                    menuItemView.applyOffset(lastOffsetApplied)
-                }
+                updateOffset()
             }
 
-            fun updateOffset(alpha: Float) {
-                menuItemView.applyOffset(alpha)
-            }
+            fun updateOffset() = currentOffset.let{ if (it != -1f) menuItemView.applyOffset(it)}
 
             fun updateLock(menuItem: MenuItemImpl){
                 menuItemView.isEnabled = !isLocked && menuItem.isEnabled
@@ -382,14 +379,10 @@ internal class DrawerMenuPresenter(
                 val menuItem = categoryItem.menuItem
                 menuItemView.initialize(menuItem, DrawerMenuItemView.MENU_TYPE_CATEGORY)
                 updateLock(menuItem)
-                if (lastOffsetApplied != -1f){
-                    menuItemView.applyOffset(lastOffsetApplied)
-                }
+                updateOffset()
             }
 
-            fun updateOffset(offset: Float) {
-                menuItemView.applyOffset(offset)
-            }
+            fun updateOffset() = currentOffset.let{ if (it != -1f) menuItemView.applyOffset(it)}
 
             fun updateLock(menuItem: MenuItemImpl){
                 menuItemView.isEnabled = !isLocked && menuItem.isEnabled
@@ -405,19 +398,19 @@ internal class DrawerMenuPresenter(
                 menuItemView.initialize(menuItem, DrawerMenuItemView.MENU_TYPE_SUBHEADER)
                 updateLock(menuItem)
                 menuItemView.animateToggle(navItem.isExpanded)
-                if (lastOffsetApplied != -1f){
-                    menuItemView.applyOffset(lastOffsetApplied)
-                }
+                updateOffset()
             }
 
-            fun updateOffset(alpha: Float) {
-                menuItemView.applyOffset(alpha)
-                if (alpha == 0f) {
-                    drawerMenuView?.post {
-                        toggleIfHasSubMenu(
-                            (items[layoutPosition] as NavigationMenuTextItem).menuItem,
-                            true
-                        )
+            fun updateOffset() {
+                currentOffset.let{
+                    if (it != -1f) menuItemView.applyOffset(it)
+                    if (it == 0f) {
+                        drawerMenuView?.post {
+                            toggleIfHasSubMenu(
+                                (items[layoutPosition] as NavigationMenuTextItem).menuItem,
+                                true
+                            )
+                        }
                     }
                 }
             }
@@ -433,12 +426,7 @@ internal class DrawerMenuPresenter(
                 (itemView as DrawerDividerItemView).setNavRailSlideRangeProvider(getNavRailSlideRange)
             }
 
-            fun updateOffset(offset: Float? = null) {
-                val offset = offset ?: lastOffsetApplied
-                if (offset != -1f) {
-                    (itemView as DrawerDividerItemView).applyOffset(offset)
-                }
-            }
+            fun updateOffset() = currentOffset.let{ if (it != -1f) (itemView as DrawerDividerItemView).applyOffset(it)}
         }
 
         private fun setAccessibilityDelegate(view: View, position: Int, isHeader: Boolean) {
@@ -555,7 +543,7 @@ internal class DrawerMenuPresenter(
             if (forceCollapsed && !navMenuItem.isExpanded) return true
 
             val newValue =  !navMenuItem.isExpanded
-            if (newValue && lastOffsetApplied< 0.05) return false//todo
+            if (newValue && currentOffset < 0.05) return false//todo
             items[index] = navMenuItem.copy (
                 isExpanded = newValue
             )
