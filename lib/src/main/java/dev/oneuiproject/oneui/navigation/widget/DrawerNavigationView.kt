@@ -105,30 +105,10 @@ class DrawerNavigationView @JvmOverloads constructor(
     private val drawerStateListener by lazy(LazyThreadSafetyMode.NONE) {
         DrawerLayout.DrawerStateListener {
             when (it){
-                DrawerState.OPEN -> {
-                    offsetUpdaterJob?.cancel()
-                    menuPresenter.adapter!!.updateOffset(1f)
-                }
-                DrawerState.CLOSE-> {
-                    offsetUpdaterJob?.cancel()
-                    menuPresenter.adapter!!.updateOffset(0f)
-                }
-
-                DrawerState.CLOSING,
-                DrawerState.OPENING -> {
-                    startOffsetUpdater()
-                }
-            }
-        }
-    }
-
-    private var offsetUpdaterJob: Job? = null
-    private fun startOffsetUpdater(){
-        if (offsetUpdaterJob?.isActive == true) return
-        offsetUpdaterJob = CoroutineScope(Dispatchers.Main).launch {
-            while(isActive) {
-                menuPresenter.adapter!!.updateOffset(drawerLayout.drawerOffset)
-                delay(20)
+                DrawerState.OPEN -> menuPresenter.adapter!!.updateOffset(1f)
+                DrawerState.CLOSE-> menuPresenter.adapter!!.updateOffset(0f)
+                is DrawerState.CLOSING ->  menuPresenter.adapter!!.updateOffset(it.slideOffset)
+                is DrawerState.OPENING -> menuPresenter.adapter!!.updateOffset(it.slideOffset)
             }
         }
     }
