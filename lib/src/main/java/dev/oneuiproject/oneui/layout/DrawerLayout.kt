@@ -306,9 +306,9 @@ open class DrawerLayout(context: Context, attrs: AttributeSet?) :
      *
      * @param enabled True to enable the drawer, false to disable it.
      */
-    open fun setDrawerEnabled(enabled: Boolean){
+    open fun setDrawerEnabled(enabled: Boolean) = doOnLayout {
         val newState = if (enabled) FeatureState.ENABLED else FeatureState.DISABLED
-        if (drawerEnabledState == newState) return
+        if (drawerEnabledState == newState) return@doOnLayout
         drawerEnabledState = newState
         if (isAttachedToWindow) {
             updateDrawerState()

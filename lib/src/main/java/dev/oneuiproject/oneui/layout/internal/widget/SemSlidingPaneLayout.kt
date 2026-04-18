@@ -11,7 +11,6 @@ import android.graphics.drawable.LayerDrawable
 import android.os.SystemClock
 import android.util.AttributeSet
 import android.util.Log
-import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
@@ -35,7 +34,6 @@ import androidx.core.view.WindowInsetsCompat.Type.displayCutout
 import androidx.core.view.WindowInsetsCompat.Type.ime
 import androidx.core.view.WindowInsetsCompat.Type.systemBars
 import androidx.core.view.isGone
-import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.core.view.marginStart
 import androidx.core.view.updateLayoutParams
@@ -99,7 +97,7 @@ internal class SemSlidingPaneLayout @JvmOverloads constructor(
     private var currentDrawerState: DrawerState = DrawerState.CLOSE
 
     @Volatile
-    private var sSlideOffset = 0f
+    private var slideOffset = 0f
 
     private var drawerCornerRadius = -1
     private var isDualDetails = false
@@ -208,7 +206,7 @@ internal class SemSlidingPaneLayout @JvmOverloads constructor(
     }
 
     private fun ensureLayoutPreview() {
-        sSlideOffset = 1f
+        slideOffset = 1f
         if (!seslGetResizeOff()) {
             navRailSlideViewContent!!.updatePadding(
                 right = _drawerPane.layoutParams.width
@@ -243,7 +241,7 @@ internal class SemSlidingPaneLayout @JvmOverloads constructor(
                     findViewById(R.id.tbl_bottom_corners),
                     findViewById(R.id.tbl_footer_parent)
                 )
-                resizeSlideableView(sSlideOffset)
+                resizeSlideableView(slideOffset)
             }
             splitDetailsPane?.isGone = true
         }
@@ -343,7 +341,7 @@ internal class SemSlidingPaneLayout @JvmOverloads constructor(
     override val isDrawerOpen: Boolean get() = currentDrawerState == DrawerState.OPEN
 
     override val isDrawerOpenOrIsOpening: Boolean
-        get() = currentDrawerState == DrawerState.OPEN || currentDrawerState == DrawerState.OPENING
+        get() = currentDrawerState == DrawerState.OPEN || currentDrawerState is DrawerState.OPENING
 
     private var drawerStateListener: ((state: DrawerState) -> Unit)? = null
 
@@ -351,12 +349,12 @@ internal class SemSlidingPaneLayout @JvmOverloads constructor(
         drawerStateListener = listener
     }
 
-    override fun getDrawerSlideOffset(): Float = sSlideOffset
+    override fun getDrawerSlideOffset(): Float = slideOffset
 
     private fun dispatchDrawerStateChange(newSlideOffset: Float) {
-        if (sSlideOffset == newSlideOffset) return
-        val newState = getDrawerStateUpdate(sSlideOffset, newSlideOffset)
-        sSlideOffset = newSlideOffset
+        if (slideOffset == newSlideOffset) return
+        val newState = getDrawerStateUpdate(slideOffset, newSlideOffset)
+        slideOffset = newSlideOffset
 
         if (newState != currentDrawerState) {
             currentDrawerState = newState
@@ -374,11 +372,11 @@ internal class SemSlidingPaneLayout @JvmOverloads constructor(
                 }
                 navigationIcon?.apply {
                     @SuppressLint("VisibleForTests")
-                    (32.dpToPx(resources) * sSlideOffset).let{
+                    (32.dpToPx(resources) * slideOffset).let{
                         titleTextView?.translationX = -it
                         subtitleTextView?.translationX = -it
                     }
-                    (255 * (1f - (sSlideOffset * 15f)).coerceIn(0f, 1f)).toInt().let {
+                    (255 * (1f - (slideOffset * 15f)).coerceIn(0f, 1f)).toInt().let {
                         alpha = it
                         navRailDrawerButton?.alpha =  1f - it
                         navRailDrawerButtonBadgeView?.alpha = 1f - it
@@ -398,7 +396,7 @@ internal class SemSlidingPaneLayout @JvmOverloads constructor(
 
     private fun updateNavBadgeScale() {
         navRailDrawerButtonBadgeView!!.apply {
-            val scale = 1f - sSlideOffset
+            val scale = 1f - slideOffset
             scaleX = scale
             scaleY = scale
         }
@@ -636,13 +634,18 @@ internal class SemSlidingPaneLayout @JvmOverloads constructor(
 
                 if (animate) {
                     createDrawerModeAnimator(startMargin, 0).apply {
-                        doOnEnd { updateNavButton(); _drawerPane.isInvisible = true }
+                        doOnEnd {
+                            updateNavButton()
+                            _drawerPane.isGone = true
+                            dispatchDrawerStateChange(0f)
+                        }
                         start()
                     }
                 }else{
-                    _drawerPane.isInvisible = true
                     updateSlideViewPaneWidth(0)
                     updateNavButton()
+                    _drawerPane.isGone = true
+                    dispatchDrawerStateChange(0f)
                 }
             }
         }
