@@ -71,18 +71,20 @@ internal class QrCodeScanEngine(
                 onSuccess = { barcodes ->
                     if (listener.isAnalysisPaused() || pauseAnalysis.get()) return@handleResult
 
-                    val barcode = barcodes.firstOrNull() ?: return@handleResult
-                    val result = barcode.rawValue ?: return@handleResult
+                    val barcode = barcodes.firstOrNull()
+                    val result = barcode?.rawValue
 
-                    listener.onQrDetected(
-                        qrContent = result,
-                        frameBitmap = frameBitmap,
-                        barcode = barcode,
-                        isCameraInput = true
-                    )
+                    if (!result.isNullOrEmpty()) {
+                        listener.onQrDetected(
+                            qrContent = result,
+                            frameBitmap = frameBitmap,
+                            barcode = barcode,
+                            isCameraInput = true
+                        )
 
-                    // prevent duplicate callbacks until explicitly reset
-                    pauseAnalysis.set(true)
+                        // prevent duplicate callbacks until explicitly reset
+                        pauseAnalysis.set(true)
+                    }
                 },
                 onError = { e -> },
                 onFinally = { imageProxy.close() }
@@ -101,7 +103,7 @@ internal class QrCodeScanEngine(
                     val barcode = barcodes.firstOrNull()
                     val result = barcode?.rawValue
 
-                    if (barcode != null && result != null) {
+                    if (!result.isNullOrEmpty()) {
                         listener.onQrDetected(
                             qrContent = result,
                             frameBitmap = originalBitmap,
