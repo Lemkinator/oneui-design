@@ -12,6 +12,7 @@ import androidx.annotation.Px
 import androidx.core.content.withStyledAttributes
 import androidx.core.graphics.toColorInt
 import dev.oneuiproject.oneui.design.R
+import dev.oneuiproject.oneui.ktx.dpToPxFactor
 import dev.oneuiproject.oneui.qr.utils.QrEncoder
 
 /**
@@ -100,6 +101,11 @@ open class QrImageView @JvmOverloads constructor(
     private var tintFrame = false
     private var regenerate = false
 
+    private val dpToPx = context.dpToPxFactor
+
+    private var borderWidth = (12 * dpToPx).toInt()
+    private var borderRadius = (32 * dpToPx).toInt()
+
     init {
         attrs?.let {
             context.withStyledAttributes(
@@ -117,7 +123,8 @@ open class QrImageView @JvmOverloads constructor(
                 size = getDimensionPixelSize(R.styleable.QRImageView_qrSize, -1)
                 tintAnchor = getBoolean(R.styleable.QRImageView_qrTintAnchor, false)
                 tintFrame = getBoolean(R.styleable.QRImageView_qrTintFrame, false)
-
+                borderWidth = getDimensionPixelSize(R.styleable.QRImageView_qrBorderWidth, borderWidth)
+                borderRadius = getDimensionPixelSize(R.styleable.QRImageView_qrBorderRadius, borderRadius)
                 updateImage()
             }
         }
@@ -130,6 +137,8 @@ open class QrImageView @JvmOverloads constructor(
             roundedFrame(roundedFrame)
             setBackgroundColor(bgColor)
             setForegroundColor(fgColor, tintAnchor, tintFrame)
+            setBorderWidth(borderWidth)
+            setBorderRadius(borderRadius)
         }
         regenerate = false
         //This internally calls super.invalidate()
@@ -250,6 +259,36 @@ open class QrImageView @JvmOverloads constructor(
         if (this.bgColor != bgColor) {
             this.bgColor = bgColor
             regenerate = true
+        }
+    }
+
+    /**
+     * Sets the width of the border around the QR code.
+     *
+     * Call [invalidate] to apply the changes.
+     *
+     * @param borderWidth The new border width in pixels.
+     */
+    fun setBorderWidth(@Px width: Int) = apply {
+        if (width < 0) {
+            this.borderWidth = 0
+        } else {
+            this.borderWidth = width
+        }
+    }
+
+    /**
+     * Sets the corner radius for the QR code's border.
+     *
+     * Call [invalidate] to apply the changes.
+     *
+     * @param borderRadius The new radius in pixels.
+     */
+    fun setBorderRadius(@Px radius: Int) = apply {
+        if (radius < 0) {
+            this.borderRadius = 0
+        } else {
+            this.borderRadius = radius
         }
     }
 

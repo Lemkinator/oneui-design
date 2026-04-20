@@ -226,6 +226,8 @@
         <attr name="qrForegroundColor" format="color" />
         <attr name="qrTintFrame" format="boolean"/>
         <attr name="qrTintAnchor" format="boolean"/>
+        <attr name="qrBorderWidth" format="dimension"/>
+        <attr name="qrBorderRadius" format="dimension"/>
     </declare-styleable>
 
     <declare-styleable name="AutoHideIndexScrollView">

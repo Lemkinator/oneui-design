@@ -67,6 +67,8 @@ open class QrEncoder(private val context: Context, private val content: String) 
     private var qrBGColor = "#fcfcfc".toColorInt()
     private var qrTintAnchor = false
     private var qrTintBorder = false
+    private var borderWidth = (12 * dpToPx).toInt()
+    private var borderRadius = (32 * dpToPx).toInt()
 
     /**
      * Sets the size of the QR code.
@@ -108,6 +110,33 @@ open class QrEncoder(private val context: Context, private val content: String) 
      */
     fun roundedFrame(apply: Boolean) = apply { this.qrFrame = apply }
 
+    /**
+     * Sets the width of the border (frame) around the QR code.
+     *
+     * @param width The border width in pixels. Value must be non-negative.
+     * @return The current [QrEncoder] instance for chaining.
+     */
+    fun setBorderWidth(@Px width: Int) = apply {
+        if (width < 0) {
+            this.borderWidth = 0
+        } else {
+            this.borderWidth = width
+        }
+    }
+
+    /**
+     * Sets the corner radius for the QR code's frame.
+     *
+     * @param radius The radius in pixels. Value must be non-negative.
+     * @return The current [QrEncoder] instance for chaining.
+     */
+    fun setBorderRadius(@Px radius: Int) = apply {
+        if (radius < 0) {
+            this.borderRadius = 0
+        } else {
+            this.borderRadius = radius
+        }
+    }
 
     /**
      * Sets the foreground color of the QR code, with options to tint anchor and border.
@@ -232,8 +261,8 @@ open class QrEncoder(private val context: Context, private val content: String) 
     }
 
     private fun addFrame(qrcode: Bitmap): Bitmap {
-        val border = (12 * dpToPx).toInt()
-        val radius= (32 * dpToPx).toInt()
+        val border = borderWidth
+        val radius= borderRadius
 
         val newWidth = qrcode.width + border * 2
         val newHeight = qrcode.height + border * 2
