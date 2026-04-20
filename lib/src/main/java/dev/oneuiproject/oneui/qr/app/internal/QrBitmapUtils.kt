@@ -133,3 +133,30 @@ internal fun getTargetRect(
         }
     }
 }
+
+internal fun RectF.normalizeWith(imageBounds: RectF, bitmap: Bitmap) : RectF {
+    val effectiveCrop = this
+    // Normalize crop rect relative to the visible image bounds
+    val relLeft = (effectiveCrop.left - imageBounds.left) / imageBounds.width()
+    val relTop = (effectiveCrop.top - imageBounds.top) / imageBounds.height()
+    val relRight = (effectiveCrop.right - imageBounds.left) / imageBounds.width()
+    val relBottom = (effectiveCrop.bottom - imageBounds.top) / imageBounds.height()
+
+
+    // Convert to bitmap coordinates
+    val bmpWidth = bitmap.width.toFloat()
+    val bmpHeight = bitmap.height.toFloat()
+
+    var nLeft = (relLeft * bmpWidth)
+    var nTop = (relTop * bmpHeight)
+    var nRight = nLeft + ((relRight - relLeft) * bmpWidth)
+    var nBottom = nTop + ((relBottom - relTop) * bmpHeight)
+
+    // Clamp to valid region
+    if (nLeft < 0) nLeft = 0f
+    if (nTop < 0) nTop = 0f
+    if (nRight > bitmap.width) nRight = bitmap.width.toFloat()
+    if (nBottom > bitmap.height) nBottom = bitmap.height.toFloat()
+
+    return RectF(nLeft, nTop, nRight, nBottom)
+}

@@ -52,6 +52,7 @@ import dev.oneuiproject.oneui.qr.app.internal.cropToUprightSquare
 import dev.oneuiproject.oneui.qr.app.internal.distance
 import dev.oneuiproject.oneui.qr.app.internal.getAngleDegrees
 import dev.oneuiproject.oneui.qr.app.internal.getTargetRect
+import dev.oneuiproject.oneui.qr.app.internal.normalizeWith
 import dev.oneuiproject.oneui.qr.widget.internal.AnimatorFactory
 import dev.oneuiproject.oneui.qr.widget.internal.AnimatorFactory.defaultScanningPathInterpolator
 import dev.oneuiproject.oneui.qr.widget.internal.AnimatorFactory.sineInOut60
@@ -206,6 +207,7 @@ class QrCodeScannerView @JvmOverloads constructor(
     private var roiLottie: LottieAnimationView
     private var flashButton: LottieAnimationView
     private var galleryButton: ImageView
+    private val quitZoneInset = 80f
     /** Contains the title, flash button and gallery button */
     private var defaultViewGroup: ConstraintLayout
     private var dimBg: View
@@ -363,34 +365,42 @@ class QrCodeScannerView @JvmOverloads constructor(
             return
         }
 
-        // Normalize crop rect relative to the visible image bounds
-        val relLeft = (effectiveCrop.left - imageBounds.left) / imageBounds.width()
-        val relTop = (effectiveCrop.top - imageBounds.top) / imageBounds.height()
-        val relRight = (effectiveCrop.right - imageBounds.left) / imageBounds.width()
-        val relBottom = (effectiveCrop.bottom - imageBounds.top) / imageBounds.height()
+        // User-visible cropped image
+        val normalizedCrop = effectiveCrop.normalizeWith(imageBounds, bitmap)
+        val nWidth = normalizedCrop.width().toInt()
+        val nHeight = normalizedCrop.height().toInt()
+        if (nWidth <= 0 || nHeight <= 0) {
+            resetAndAnimateRoi()
+           return
+        }
+        val cropped = Bitmap.createBitmap(
+            bitmap,
+            normalizedCrop.left.toInt(),
+            normalizedCrop.top.toInt(),
+            nWidth,
+            nHeight
+        )
+        updateToDecodedImageLayout()
+        showDecodedImage(cropped, false)
 
-        // Convert to bitmap coordinates
-        val bmpWidth = bitmap.width.toFloat()
-        val bmpHeight = bitmap.height.toFloat()
-
-        var cropX = (relLeft * bmpWidth).toInt()
-        var cropY = (relTop * bmpHeight).toInt()
-        var cropW = ((relRight - relLeft) * bmpWidth).toInt()
-        var cropH = ((relBottom - relTop) * bmpHeight).toInt()
-
-        // Clamp to valid region
-        if (cropX < 0) cropX = 0
-        if (cropY < 0) cropY = 0
-        if (cropX + cropW > bitmap.width) cropW = bitmap.width - cropX
-        if (cropY + cropH > bitmap.height) cropH = bitmap.height - cropY
-        if (cropW <= 0 || cropH <= 0) {
+        // For input bitmap, widen quit zone in case border is cropped too thinly
+        effectiveCrop.inset(-quitZoneInset, -quitZoneInset)
+        val inputNormalizedCrop = effectiveCrop.normalizeWith(imageBounds, bitmap)
+        val nInputWidth = inputNormalizedCrop.width().toInt()
+        val nHeight2 = inputNormalizedCrop.height().toInt()
+        if (nInputWidth <= 0 || nHeight2 <= 0) {
             resetAndAnimateRoi()
             return
         }
+        val inputBitmap = Bitmap.createBitmap(
+            bitmap,
+            inputNormalizedCrop.left.toInt(),
+            inputNormalizedCrop.top.toInt(),
+            nInputWidth,
+            nHeight2
+        )
+        staticInputImage = InputImage.fromBitmap(inputBitmap, 0)
 
-        val cropped = Bitmap.createBitmap(bitmap, cropX, cropY, cropW, cropH)
-        updateToDecodedImageLayout()
-        showDecodedImage(cropped, true)
         startQrRoiAnimation()
         onDecodedImageUpdated()
     }
@@ -594,8 +604,6 @@ class QrCodeScannerView @JvmOverloads constructor(
             translationX = targetBounds.centerX() - this@QrCodeScannerView.centerPoint.x
             translationY = targetBounds.centerY() - this@QrCodeScannerView.centerPoint.y
             rotation = rotationDegrees
-            scaleX = 0.8f
-            scaleY = 0.8f
             alpha = 0.0f
             visibility = VISIBLE
         }
@@ -997,7 +1005,9 @@ class QrCodeScannerView @JvmOverloads constructor(
                 cy - halfSide,
                 cx + halfSide,
                 cy + halfSide
-            )
+            ).apply {
+                inset(-quitZoneInset, -quitZoneInset)
+            }
         } else if (boundingBox != null) {
             // Fallback using bounding box
             val tl = mapPoint(boundingBox.left, boundingBox.top)
